@@ -37,26 +37,28 @@ public class MRServer {
 
     @PostMapping("merge-request/post")
     public void handlePost(HttpServletRequest request, @RequestBody GitlabWebhookData body, @RequestHeader HttpHeaders headers) {
-        System.out.println("✦ " + DateHelper.currentDateTime() + " 收到新的 merge request webhook事件: ");
+        System.out.println("✦ " + DateHelper.currentDateTime() + " 收到新的 merge request webhook 事件: ");
         System.out.println("✦ request IP Address: " + request.getRemoteAddr());
         System.out.println("✦ request header: " + headers);
-        try {
-            ObjectWriter writer = new ObjectMapper().writer().withDefaultPrettyPrinter();
-            System.out.println("✦ webhook raw data:\n" + writer.writeValueAsString(body));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+
         try {
             sentMessage(body);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+        System.out.println("✦ 本次处理结束\n");
     }
 
     private static void sentMessage(GitlabWebhookData webhookData) throws JsonProcessingException {
-
         // 只处理 merged 通知
         if (webhookData.object_attributes.state != GitlabWebhookData.ObjectAttributes.State.MERGED) return;
+
+        try {
+            ObjectWriter writer = new ObjectMapper().writer().withDefaultPrettyPrinter();
+            System.out.println("✦ 当前事件为合并事件，原始数据:\n" + writer.writeValueAsString(webhookData));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
         boolean hasFeishuBotWebhookUrl = false;
         String feishuBotWebhookUrl = "";
@@ -72,6 +74,8 @@ public class MRServer {
 
         if (!hasFeishuBotWebhookUrl) return;
 
+        System.out.println("✦ 数据符合要求，准备发送飞书机器人消息");
+
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -81,7 +85,7 @@ public class MRServer {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(messageMap, headers);
         ResponseEntity<Map> response = restTemplate.postForEntity(feishuBotWebhookUrl, request, Map.class);
-        System.out.println("飞书机器人消息发送完成，状态码: " + response.getStatusCode());
+        System.out.println("✦ 飞书机器人消息发送完成，状态码: " + response.getStatusCode());
     }
 }
 

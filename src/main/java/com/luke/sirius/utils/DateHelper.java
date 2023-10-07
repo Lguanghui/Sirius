@@ -18,6 +18,7 @@ package com.luke.sirius.utils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class DateHelper {
     public static String currentDateTime() {
@@ -27,6 +28,7 @@ public class DateHelper {
     public static  String currentDateTime(String format) {
         SimpleDateFormat dateFormat = new SimpleDateFormat();
         dateFormat.applyPattern(format);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));
         Date date = new Date();
         return dateFormat.format(date);
     }

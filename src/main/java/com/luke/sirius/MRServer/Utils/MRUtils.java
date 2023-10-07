@@ -59,7 +59,7 @@ public class MRUtils {
                                 "text":
                                 {
                                     "tag": "lark_md",
-                                    "content": "{at} 您创建的 merge request 已合并 🎉🎉🎉"
+                                    "content": "{at} 您创建的 merge request 已被 {merged_by_user} 合并 🎉🎉🎉"
                                 }
                             },
                             {
@@ -95,7 +95,7 @@ public class MRUtils {
                                         "text":
                                         {
                                             "tag": "lark_md",
-                                            "content": "**创建时间：**\\n{created_time}"
+                                            "content": "**⏰ 创建时间：**\\n{created_time}"
                                         }
                                     },
                                     {
@@ -103,7 +103,7 @@ public class MRUtils {
                                         "text":
                                         {
                                             "tag": "lark_md",
-                                            "content": "**更新时间：**\\n{update_time}"
+                                            "content": "**⌛️ 更新时间：**\\n{update_time}"
                                         }
                                     }
                                 ]
@@ -147,6 +147,7 @@ public class MRUtils {
                 .replace("{update_time}", formatTime(data.object_attributes.updated_at))
                 .replace("{created_time}", formatTime(data.object_attributes.created_at))
                 .replace("{at}", at)
+                .replace("{merged_by_user}", data.user.name)
                 ;
 
         ObjectMapper mapper = new ObjectMapper();
