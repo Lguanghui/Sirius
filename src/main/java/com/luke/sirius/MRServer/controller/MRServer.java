@@ -17,6 +17,8 @@
 package com.luke.sirius.MRServer.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.luke.sirius.MRServer.Utils.MRUtils;
 import com.luke.sirius.MRServer.data.GitlabWebhookData;
 import com.luke.sirius.utils.DateHelper;
@@ -34,9 +36,16 @@ import java.util.Map;
 public class MRServer {
 
     @PostMapping("merge-request/post")
-    public void handlePost(HttpServletRequest request, @RequestBody GitlabWebhookData body) {
-        System.out.println(DateHelper.currentDateTime() + " 收到新的 merge request webhook事件: ");
-        System.out.println("webhook 数据:\n" + body.toString());
+    public void handlePost(HttpServletRequest request, @RequestBody GitlabWebhookData body, @RequestHeader HttpHeaders headers) {
+        System.out.println("✦ " + DateHelper.currentDateTime() + " 收到新的 merge request webhook事件: ");
+        System.out.println("✦ request IP Address: " + request.getRemoteAddr());
+        System.out.println("✦ request header: " + headers);
+        try {
+            ObjectWriter writer = new ObjectMapper().writer().withDefaultPrettyPrinter();
+            System.out.println("✦ webhook raw data:\n" + writer.writeValueAsString(body));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         try {
             sentMessage(body);
         } catch (JsonProcessingException e) {
