@@ -17,10 +17,15 @@
 在服务器相关目录下输入指令：
 
 ```shell
-nohup java -jar Sirius-0.0.x-SNAPSHOT.jar > log.txt &
+nohup java -jar Sirius-0.0.x-SNAPSHOT.jar >> log.txt &
 ```
 
 `nohup` 表示进程在 ssh 关闭后依然能够存活，部署后日志将被输出到 `log.txt` 文件。
+
+关于输出重定向：
+- `>` 输出重定向：会将原来的文件内容覆盖
+
+- `>>` 追加：不会覆盖原来文件的内容，而是追加到文件的尾部
 
 ### 停止服务
 

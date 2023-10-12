@@ -21,8 +21,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.luke.sirius.MRServer.Utils.MRUtils;
 import com.luke.sirius.MRServer.data.GitlabWebhookData;
+import com.luke.sirius.MRServer.database.MergeRequestEntity;
+import com.luke.sirius.MRServer.database.MergeRequestRepository;
 import com.luke.sirius.utils.DateHelper;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +38,9 @@ import java.util.Map;
 @RestController
 public class MRServer {
 
+    @Autowired
+    private MergeRequestRepository mergeRequestRepository;
+
     @PostMapping("merge-request/post")
     public void handlePost(HttpServletRequest request, @RequestBody GitlabWebhookData body, @RequestHeader HttpHeaders headers) {
         System.out.println("✦ " + DateHelper.currentDateTime() + " 收到新的 merge request webhook 事件: ");
@@ -42,7 +48,14 @@ public class MRServer {
         System.out.println("✦ request header: " + headers);
 
         try {
-            sentMessage(body);
+            if (body.object_attributes.state == GitlabWebhookData.ObjectAttributes.State.MERGED) {
+                // 处理 merged 通知
+                sentMessage(body);
+            } else if (body.object_attributes.state == GitlabWebhookData.ObjectAttributes.State.OPENED) {
+                // 处理 opened 通知
+                saveOpenedMergeRequest(body);
+            }
+
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -50,9 +63,6 @@ public class MRServer {
     }
 
     private static void sentMessage(GitlabWebhookData webhookData) throws JsonProcessingException {
-        // 只处理 merged 通知
-        if (webhookData.object_attributes.state != GitlabWebhookData.ObjectAttributes.State.MERGED) return;
-
         try {
             ObjectWriter writer = new ObjectMapper().writer().withDefaultPrettyPrinter();
             System.out.println("✦ 当前事件为合并事件，原始数据:\n" + writer.writeValueAsString(webhookData));
@@ -86,6 +96,18 @@ public class MRServer {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(messageMap, headers);
         ResponseEntity<Map> response = restTemplate.postForEntity(feishuBotWebhookUrl, request, Map.class);
         System.out.println("✦ 飞书机器人消息发送完成，状态码: " + response.getStatusCode());
+    }
+
+    private void saveOpenedMergeRequest(GitlabWebhookData webhookData) {
+        try {
+            ObjectWriter writer = new ObjectMapper().writer().withDefaultPrettyPrinter();
+            String originalData = writer.writeValueAsString(webhookData);
+            MergeRequestEntity entity = mergeRequestRepository.findById(webhookData.object_attributes.iid).orElse(new MergeRequestEntity(webhookData.object_attributes.iid, webhookData.object_attributes.url, originalData));
+            final MergeRequestEntity updatedEmployee = mergeRequestRepository.save(entity);
+            System.out.println("✦ 当前事件为创建事件，原始数据:\n" + originalData);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 

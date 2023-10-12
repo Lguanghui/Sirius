@@ -72,7 +72,7 @@ public class GitlabWebhookData {
         public Boolean draft;
         public Integer head_pipeline_id;
         public Integer id;
-        public Integer iid;
+        public Long iid;
         public String merge_status;
         public String source_branch;
         public Integer source_project_id;
