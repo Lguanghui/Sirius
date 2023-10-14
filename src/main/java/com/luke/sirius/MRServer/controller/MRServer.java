@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 @RestController
 public class MRServer {
@@ -97,7 +98,7 @@ public class MRServer {
         System.out.println("✦ 本次处理结束\n");
     }
 
-    private static void sentMessage(GitlabWebhookData webhookData) throws JsonProcessingException {
+    private void sentMessage(GitlabWebhookData webhookData) throws JsonProcessingException {
         try {
             ObjectWriter writer = new ObjectMapper().writer().withDefaultPrettyPrinter();
             System.out.println("✦ 当前事件为合并事件，原始数据:\n" + writer.writeValueAsString(webhookData));
@@ -105,19 +106,29 @@ public class MRServer {
             throw new RuntimeException(e);
         }
 
-        boolean hasFeishuBotWebhookUrl = false;
-        String feishuBotWebhookUrl = "";
-        String feishuOpenID = "";
-        for (GitlabWebhookData.Label label : webhookData.labels) {
-            if (label.title.contains("webhook-")) {
-                hasFeishuBotWebhookUrl = true;
-                feishuBotWebhookUrl = label.description;
-            } else if (label.title.contains("id-")) {
-                feishuOpenID = label.description;
+        AtomicReference<String> feishuBotWebhookUrl = new AtomicReference<>("");
+        AtomicReference<String> feishuOpenID = new AtomicReference<>("");
+
+        Optional<MergeRequestEntity> entity = mergeRequestRepository.findById(webhookData.object_attributes.iid);
+        entity.ifPresent( mergeRequestEntity -> {
+            MRUtils.printMessage("在数据库中找到配置");
+            feishuOpenID.set(mergeRequestEntity.getPersonal_openid());
+            feishuBotWebhookUrl.set(mergeRequestEntity.getBot_webhook_url());
+        });
+
+        if (feishuBotWebhookUrl.get().isEmpty() || feishuOpenID.get().isEmpty()) {
+            // TODO: 2023/10/14 后期验证完毕后，去掉 MR 脚本中添加 label 的逻辑
+            MRUtils.printMessage("在数据库中没有找到相关配置，尝试在 label 中查找");
+            for (GitlabWebhookData.Label label : webhookData.labels) {
+                if (label.title.contains("webhook-")) {
+                    feishuBotWebhookUrl.set(label.description);
+                } else if (label.title.contains("id-")) {
+                    feishuOpenID.set(label.description);
+                }
             }
         }
 
-        if (!hasFeishuBotWebhookUrl) return;
+        if (feishuBotWebhookUrl.get().isEmpty()) return;
 
         System.out.println("✦ 数据符合要求，准备发送飞书机器人消息");
 
@@ -126,10 +137,10 @@ public class MRServer {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Map<String, Object> messageMap = MRUtils.getMergedBotMessage(webhookData, feishuOpenID);
+        Map<String, Object> messageMap = MRUtils.getMergedBotMessage(webhookData, feishuOpenID.get());
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(messageMap, headers);
-        ResponseEntity<Map> response = restTemplate.postForEntity(feishuBotWebhookUrl, request, Map.class);
+        ResponseEntity<Map> response = restTemplate.postForEntity(feishuBotWebhookUrl.get(), request, Map.class);
         System.out.println("✦ 飞书机器人消息发送完成，状态码: " + response.getStatusCode());
     }
 
