@@ -48,6 +48,14 @@ kill -9 261126
 > https://juejin.cn/post/7232160630399320124
 > [确保SSH退出登陆后进程继续在后台运行](https://dcrozz.github.io/2017/03/19/%E8%BD%AC%E8%BD%BD-%E7%A1%AE%E4%BF%9DSSH%E9%80%80%E5%87%BA%E7%99%BB%E9%99%86%E5%90%8E%E8%BF%9B%E7%A8%8B%E7%BB%A7%E7%BB%AD%E5%9C%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C/)
 
+### Bump Version
+
+大版本用 major，中版本用 minor，小版本（补丁）用 patch
+
+```shell
+bump-my-version --no-configured-files major build.gradle
+```
+
 ## JVM 调优
 
 项目部署后发现内存占用比较高的话，可以在部署时添加几个参数，限制和优化内存占用。
