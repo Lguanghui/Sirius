@@ -196,6 +196,11 @@ public class MRServer {
                 Set<String> bot_message_at_ids = entity.getBot_message_at_ids();
                 String author = entity.getAuthor();
 
+                if (webhookData.object_attributes.state != GitlabWebhookData.ObjectAttributes.State.OPENED) {
+                    MRUtils.printMessage("数据库数据读取成功，但 merge request 状态非 opened，不发送提醒消息，iid: " + entity.getId());
+                    return;
+                }
+
                 MRUtils.printMessage("数据库数据读取成功，准备发送提醒消息，iid: " + entity.getId());
 
                 RestTemplate restTemplate = new RestTemplate();
