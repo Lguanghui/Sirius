@@ -1,0 +1,10 @@
+[tool.bumpversion]
+current_version = "1.0.0"
+commit = true
+tag = true
+
+[[tool.bumpversion.files]]
+filename = "build.gradle"
+search = "{current_version}-SNAPSHOT"
+replace = "{new_version}-SNAPSHOT"
+

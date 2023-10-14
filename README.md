@@ -53,7 +53,7 @@ kill -9 261126
 大版本用 major，中版本用 minor，小版本（补丁）用 patch
 
 ```shell
-bump-my-version --no-configured-files major build.gradle
+bump-my-version bump minor
 ```
 
 ## JVM 调优
