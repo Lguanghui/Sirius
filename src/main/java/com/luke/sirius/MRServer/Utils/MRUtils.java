@@ -158,9 +158,13 @@ public class MRUtils {
      * @return 飞书消息字典
      */
     public static Map<String, Object> generateRemindBotMessage(GitlabWebhookData data, Set<String> ids, String author) throws JsonProcessingException {
-        StringBuilder at_str = new StringBuilder();
+        StringBuilder at_str_builder = new StringBuilder();
         for (String id: ids) {
-            at_str.append(" ").append(String.format("<at id=%s></at>", id));
+            at_str_builder.append(" ").append(String.format("<at id=%s></at>", id));
+        }
+        String at_str = "";
+        if (!at_str_builder.isEmpty()) {
+            at_str = at_str_builder.toString();
         }
         String jsonString = """
                 {
@@ -261,7 +265,7 @@ public class MRUtils {
                 .replace("{merge_request_url}", data.object_attributes.url)
                 .replace("{merge_request_title}", data.object_attributes.title)
                 .replace("{created_time}", formatTime(data.object_attributes.created_at))
-                .replace("{at}", at_str.toString())
+                .replace("{at}", at_str)
                 .replace("{author}", author)
                 ;
 

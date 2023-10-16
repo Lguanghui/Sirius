@@ -201,6 +201,11 @@ public class MRServer {
                     return;
                 }
 
+                if (entity.getBot_webhook_url().isEmpty()) {
+                    MRUtils.printMessage("数据库数据读取成功，但该数据未指定机器人 webhook，不发送提醒消息，iid: " + entity.getId());
+                    return;
+                }
+
                 MRUtils.printMessage("数据库数据读取成功，准备发送提醒消息，iid: " + entity.getId());
 
                 RestTemplate restTemplate = new RestTemplate();
