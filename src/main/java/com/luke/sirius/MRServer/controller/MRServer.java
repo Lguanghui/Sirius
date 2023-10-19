@@ -184,7 +184,7 @@ public class MRServer {
      * 定时任务，周一至周五 10 点 ～ 18:59 点 之间每隔 30 分钟执行一次
      * <a href="https://crontab.cronhub.io/">cron 表达式校验</a>
      */
-    @Scheduled(cron = "0 0/30 10-18 ? * MON-FRI")
+    @Scheduled(cron = "0 0/30 10-18 ? * MON-FRI", zone = "Asia/Shanghai")
 //    @Scheduled(fixedDelay = 10000L)
     public void job2() {
         System.out.println("✦ 定时任务开始执行");
