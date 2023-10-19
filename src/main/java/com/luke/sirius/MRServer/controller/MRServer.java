@@ -61,7 +61,11 @@ public class MRServer {
                 createData.personal_openid,
                 createData.bot_webhook_url,
                 createData.bot_message_at_ids));
+        entity.setPersonal_openid(createData.personal_openid);
+        entity.setUrl(createData.url);
+        entity.setBot_message_at_ids(createData.bot_message_at_ids);
         entity.setAuthor(createData.author);
+        entity.setBot_webhook_url(createData.bot_webhook_url);
 
         mergeRequestRepository.save(entity);
         MRUtils.printMessage("新的 merge request 数据入库成功");
