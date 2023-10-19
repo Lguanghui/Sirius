@@ -196,6 +196,11 @@ public class MRServer {
                 Set<String> bot_message_at_ids = entity.getBot_message_at_ids();
                 String author = entity.getAuthor();
 
+                if (webhookData.object_attributes.url.isEmpty()) {
+                    MRUtils.printMessage("数据库数据读取成功，但数据有误，不发送提醒消息，iid: " + entity.getId());
+                    return;
+                }
+
                 if (webhookData.object_attributes.state != GitlabWebhookData.ObjectAttributes.State.OPENED) {
                     MRUtils.printMessage("数据库数据读取成功，但 merge request 状态非 opened，不发送提醒消息，iid: " + entity.getId());
                     return;
@@ -219,7 +224,7 @@ public class MRServer {
                 ResponseEntity<Map> response = restTemplate.postForEntity(entity.getBot_webhook_url(), request, Map.class);
                 System.out.println("✦ 飞书机器人消息发送完成，状态码: " + response.getStatusCode());
 
-            } catch (JsonProcessingException e) {
+            } catch (NullPointerException | JsonProcessingException e) {
                 System.out.println("✦ 将 json string 转为对象时失败");
             }
         }
