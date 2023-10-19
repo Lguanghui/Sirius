@@ -188,7 +188,7 @@ public class MRServer {
      * 定时任务，周一至周五 10 点 ～ 18:59 点 之间每隔 30 分钟执行一次
      * <a href="https://crontab.cronhub.io/">cron 表达式校验</a>
      */
-    @Scheduled(cron = "0 0/20 10-18 ? * MON-FRI", zone = "GMT+8:00")
+    @Scheduled(cron = "0 0/30 10-18 ? * MON-FRI", zone = "GMT+8:00")
     public void job2() {
         System.out.println("✦ 定时任务开始执行" + "，当前时间：" + MRUtils.currentDateTime());
         List<MergeRequestEntity> mergeRequestEntities = mergeRequestRepository.findAll();
