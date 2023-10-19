@@ -273,6 +273,13 @@ public class MRUtils {
         return mapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
     }
 
+    static public String currentDateTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat();// 格式化时间
+        sdf.applyPattern("yyyy-MM-dd HH:mm:ss");// a为am/pm的标记
+        Date date = new Date();// 获取当前时间
+        return sdf.format(date); // 输出已经格式化的现在时间（24小时制）
+    }
+
     /**
      * 将带时区的日期字符串转为不带时区的
      * @param original 原始日期字符串
