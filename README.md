@@ -1,66 +1,29 @@
 # Sirius
 
-## 打包发版
+## MRServer
 
-### 输出 jar 包
+[merge request 脚本](https://github.com/Lguanghui/ShellScripts)的服务端实现，能够接受来自 Gitlab 的，由 merge request 事件触发的 webhook 数据（POST）。
 
-在项目根目录输入指令：
+如果是创建事件或者由脚本发出的创建请求，会将接口携带的数据存至数据库。
 
-```shell
-./gradlew clean build
-```
+![img.png](images/merge_request_opened.png)
 
-然后在 `build/libs` 里面找到相关的 jar 包，将 jar 包上传至服务器。
+如果是合并事件，将向指定群聊发送飞书机器人消息，通知提出者已合并，并会删除对应的数据库数据。
 
-### 服务器部署
+![img_1.png](images/merge_request_merged.png)
 
-在服务器相关目录下输入指令：
+服务器会在周一至周五的 10 点到 19 点，每隔半个小时在数据库中查找还未合并的 merge request，并向指定群聊发送机器人消息。
 
-```shell
-nohup java -jar Sirius-0.0.x-SNAPSHOT.jar >> log.txt &
-```
+![img_2.png](images/merge_request_remind.png)
 
-`nohup` 表示进程在 ssh 关闭后依然能够存活，部署后日志将被输出到 `log.txt` 文件。
+服务器环境配置：
 
-关于输出重定向：
-- `>` 输出重定向：会将原来的文件内容覆盖
+- 系统：Debian 12
+- 数据库：MariaDB
+- Java Version: openjdk 17.0.8 2023-07-18
+- Spring Boot: 3.1.4
 
-- `>>` 追加：不会覆盖原来文件的内容，而是追加到文件的尾部
+### Todo
 
-### 停止服务
-
-终端中输入下面指令获取当前正在运行的 java 进程：
-
-```shell
-jps -l
-```
-
-![img.png](images/img.png)
-
-找到想要停止的服务进程，执行下面指令将其终止运行
-
-```shell
-kill -9 261126
-```
-
-> 打包部署参考链接：
-> https://blog.csdn.net/LeegooWang/article/details/82424362
-> https://juejin.cn/post/7232160630399320124
-> [确保SSH退出登陆后进程继续在后台运行](https://dcrozz.github.io/2017/03/19/%E8%BD%AC%E8%BD%BD-%E7%A1%AE%E4%BF%9DSSH%E9%80%80%E5%87%BA%E7%99%BB%E9%99%86%E5%90%8E%E8%BF%9B%E7%A8%8B%E7%BB%A7%E7%BB%AD%E5%9C%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C/)
-
-### Bump Version
-
-大版本用 major，中版本用 minor，小版本（补丁）用 patch
-
-```shell
-bump-my-version bump minor
-```
-
-## JVM 调优
-
-项目部署后发现内存占用比较高的话，可以在部署时添加几个参数，限制和优化内存占用。
-
-> 参考链接：
-> [JVM的GC 参数为什么要这么命名：xms、xss、xmn和xmn](https://blog.csdn.net/kusedexingfu/article/details/103744202)
-> [JVM调优总结 -Xms -Xmx -Xmn -Xss](https://cloud.tencent.com/developer/article/2052020)
-> [优化Spring程序内存占用](https://juejin.cn/post/7205162789156814906)
+- [ ] 入库数据区分组件库和主工程。因为组件库并没有配置 Gitlab 的 webhook，webhook data 始终为空。但会有部分同学使用 createMR 在组件库创建 mr。
+- [ ] 尝试使用间隔一天的定时任务清理数据库无效数据
