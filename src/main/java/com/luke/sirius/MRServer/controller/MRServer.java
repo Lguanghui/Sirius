@@ -115,7 +115,7 @@ public class MRServer {
 
         Optional<MergeRequestEntity> entity = mergeRequestRepository.findById(webhookData.object_attributes.iid);
         entity.ifPresent( mergeRequestEntity -> {
-            MRUtils.printMessage("在数据库中找到配置");
+            MRUtils.printMessage("在数据库中找到对应 iid 的数据");
             feishuOpenID.set(mergeRequestEntity.getPersonal_openid());
             feishuBotWebhookUrl.set(mergeRequestEntity.getBot_webhook_url());
         });
@@ -189,12 +189,17 @@ public class MRServer {
      * <a href="https://crontab.cronhub.io/">cron 表达式校验</a>
      */
     @Scheduled(cron = "0 0/30 10-18 ? * MON-FRI", zone = "GMT+8:00")
-    public void job2() {
-        System.out.println("✦ 定时任务开始执行" + "，当前时间：" + MRUtils.currentDateTime());
+    public void remindJob() {
+        System.out.println("✦ 定时提醒任务开始执行" + "，当前时间：" + MRUtils.currentDateTime());
         List<MergeRequestEntity> mergeRequestEntities = mergeRequestRepository.findAll();
         for (MergeRequestEntity entity : mergeRequestEntities) {
             ObjectMapper objectMapper = new ObjectMapper();
             try {
+                if (entity.getJson_data_from_gitlab_webhook() == null) {
+                    MRUtils.printMessage("数据库数据读取成功，但 webhookData 为空，不发送提醒消息，iid: " + entity.getId());
+                    continue;
+                }
+
                 GitlabWebhookData webhookData = objectMapper.readValue(entity.getJson_data_from_gitlab_webhook(), GitlabWebhookData.class);
                 Set<String> bot_message_at_ids = entity.getBot_message_at_ids();
                 String author = entity.getAuthor();
@@ -229,6 +234,28 @@ public class MRServer {
 
             } catch (NullPointerException | JsonProcessingException e) {
                 System.out.println("✦ 将 json string 转为对象时失败");
+            }
+        }
+    }
+
+    /**
+     * 定时清理任务，每天凌晨两点执行
+     */
+    @Scheduled(cron = "0 2 * * *", zone = "GMT+8:00")
+    public void clearJob() {
+        MRUtils.printMessage("定时清理任务开始执行" + "，当前时间：" + MRUtils.currentDateTime());
+        List<MergeRequestEntity> mergeRequestEntities = mergeRequestRepository.findAll();
+        for (MergeRequestEntity entity : mergeRequestEntities) {
+            int a = 1;
+            if (entity.getJson_data_from_gitlab_webhook() == null) {
+                a <<= 1;
+            }
+            if (entity.getBot_webhook_url() == null || entity.getBot_webhook_url().isEmpty()) {
+                a <<= 1;
+            }
+            if (a != 1) {
+                MRUtils.printMessage("准备删除数据，iid: " + entity.getId() + "url: " + entity.getUrl());
+                mergeRequestRepository.delete(entity);
             }
         }
     }
