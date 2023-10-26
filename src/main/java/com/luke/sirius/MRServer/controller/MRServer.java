@@ -241,7 +241,7 @@ public class MRServer {
     /**
      * 定时清理任务，每天凌晨两点执行
      */
-    @Scheduled(cron = "0 2 * * *", zone = "GMT+8:00")
+    @Scheduled(cron = "0 0 2 * * *", zone = "GMT+8:00")
     public void clearJob() {
         MRUtils.printMessage("定时清理任务开始执行" + "，当前时间：" + MRUtils.currentDateTime());
         List<MergeRequestEntity> mergeRequestEntities = mergeRequestRepository.findAll();
