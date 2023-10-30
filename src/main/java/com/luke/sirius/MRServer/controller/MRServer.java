@@ -36,10 +36,11 @@ import org.springframework.web.client.RestTemplate;
 
 import org.springframework.http.HttpHeaders;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.text.ParseException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 @RestController
@@ -219,6 +220,17 @@ public class MRServer {
                     continue;
                 }
 
+                String createdTimeStr = webhookData.object_attributes.created_at;
+                DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z");
+                LocalDateTime createdDate = LocalDateTime.parse(createdTimeStr, df);
+
+                Duration duration = Duration.between(createdDate, LocalDateTime.now());
+                if (duration.toMinutes() < 10) {
+                    // 创建时间小于十分钟，不发送提醒通知
+                    MRUtils.printMessage("数据库数据读取成功，但创建时间不足十分钟，不发送提醒消息，iid: " + entity.getId());
+                    continue;
+                }
+
                 MRUtils.printMessage("数据库数据读取成功，准备发送提醒消息，iid: " + entity.getId());
 
                 RestTemplate restTemplate = new RestTemplate();
@@ -254,7 +266,7 @@ public class MRServer {
                 a <<= 1;
             }
             if (a != 1) {
-                MRUtils.printMessage("准备删除数据，iid: " + entity.getId() + "url: " + entity.getUrl());
+                MRUtils.printMessage("准备删除数据，iid: " + entity.getId() + ", url: " + entity.getUrl());
                 mergeRequestRepository.delete(entity);
             }
         }
