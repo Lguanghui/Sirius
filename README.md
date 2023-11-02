@@ -1,5 +1,7 @@
 # Sirius
 
+[![Java CI with Gradle](https://github.com/Lguanghui/Sirius/actions/workflows/gradle.yml/badge.svg)](https://github.com/Lguanghui/Sirius/actions/workflows/gradle.yml)
+
 ## MRServer
 
 [merge request 脚本](https://github.com/Lguanghui/ShellScripts)的服务端实现，能够接受来自 Gitlab 的，由 merge request 事件触发的 webhook 数据（POST）。
